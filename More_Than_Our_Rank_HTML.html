@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RSU is More Than Its Rank</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    #hex-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 600px;
+      margin: 50px auto;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hex:hover {
+      stroke: #000;
+      stroke-width: 2;
+      cursor: pointer;
+    }
+
+    #tooltip {
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 1000;
+    }
+
+    #popup {
+      position: absolute;
+      padding: 15px;
+      color: white;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 250px;
+      display: none;
+      z-index: 10;
+    }
+
+    #popup h3 {
+      margin: 0 0 10px 0;
+    }
+
+    #popup button {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    #popup button:hover {
+      background: rgba(255,255,255,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div id="hex-container">
+    <h1 style="text-align: center; margin-top: 30px; font-family: sans-serif;">
+        Discover how RSU is more than its rank
+      </h1>
+    
+    <div id="legend" style="display: flex; justify-content: center; gap: 20px; margin: 10px 0 10px 20px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #8e001c; display: inline-block; border-radius: 4px;"></span>
+        <span>Turning research into clinical practice</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #7f7f7f; display: inline-block; border-radius: 4px;"></span>
+        <span>Shaping policy and public understanding</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #f58220; display: inline-block; border-radius: 4px;"></span>
+        <span>Aligning study programmes with societal needs</span>
+    </div>
+    </div>
+
+    <svg id="hexmap"></svg>
+    <div id="tooltip"></div>
+    <div id="popup">
+      <h3 id="popup-title"></h3>
+      <p id="popup-text"></p>
+      <button onclick="popup.style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const svg = document.getElementById("hexmap");
+    const tooltip = document.getElementById("tooltip");
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popup-title");
+    const popupText = document.getElementById("popup-text");
+
+    const hexSize = 40;
+
+    // Manually positioned hexagons
+    const data = [
+      {
+        x: 160, y: 100,
+        color: "#8e001c",
+        title: "Guidelines developed by RSU researchers improve maternal and newborn care",
+        text: `RSU researchers used survey data from 2021 to develop a curriculum for maternity staff and refine maternity care guidelines. As a result, the incidence of violence during childbirth decreased from 17% to 5%. Additionally, the percentage of young mothers who were not warned about health issues requiring attention dropped from 63% to 40%, while those not informed about their baby’s health concerns fell from 75% to 30%. <a href="https://www.rsu.lv/en/news/rsu-researchers-contribute-improving-maternal-and-newborn-care-latvia" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 240, y: 140,
+        color: "#7f7f7f",
+        title: "RSU researchers shape remote work legislation in Latvia",
+        text: `RSU researchers prepared data-driven amendments to several laws, including the formal introduction of 'remote work' into Labour Law in 2020. These changes allowed employers to compensate remote workers for costs like electricity and internet and provided tax exemptions for such expenses. Ultimately, these reforms have improved work-life balance in sectors with high remote work rates, such as IT and finance, where over 50% of employees worked remotely in 2024. <a href="https://www.rsu.lv/en/news/rsu-researchers-initiate-amendments-laws-organisation-remote-work-latvia" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 320, y: 100,
+        color: "#f58220",
+        title: "RSU launches a new era in Latvian medical education with 'Medicine 3.0'",
+        text: `In September 2025, RSU will launch 'Medicine 3.0', a fundamentally reimagined medical programme that revises 50–60% of the previous curriculum to include digital health, AI, entrepreneurial skills, legal knowledge, and strengthened research training. Developed with input from students, clinicians, and industry experts, the programme aims to prepare future doctors for rapidly evolving healthcare challenges. <a href="https://www.rsu.lv/en/news/medicine-30-study-programme-new-era-latvian-medical-education" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 400, y: 140,
+        color: "#8e001c",
+        title: "Tailored exercise therapy improves fibromyalgia patients' well-being",
+        text: `A pilot fibromyalgia study by RSU researchers helped 80% of participants reduce muscle pain and 70% improve physical endurance and sleep quality. Central to this new therapy is a tailored exercise programme. Research into the related biomarkers is ongoing. <a href="https://www.rsu.lv/en/news/rsu-researchers-improve-diagnosis-fibromyalgia" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 480, y: 100,
+        color: "#f58220",
+        title: "RSU sets the standard for AI integration into Latvian higher education",
+        text: `RSU’s Centre for Educational Growth is the first in Latvia to publish comprehensive guidelines for integrating AI into higher education. The guidelines provide lecturers with practical advice on ethical and effective AI use in teaching and help students understand how to use AI tools responsibly in their learning. <a href="https://www.rsu.lv/en/news/rsu-develops-first-guidelines-latvia-use-ai-higher-education" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 560, y: 140,
+        color: "#8e001c",
+        title: "RSU initiative saves newborns' lives through early SMA screening",
+        text: `RSU researchers’ initiative led to the inclusion of spinal muscular atrophy testing in Latvia’s national newborn screening programme. Early diagnosis through this programme has already saved three newborns by enabling treatment before symptoms appear, significantly improving their prognosis and quality of life. <a href="https://www.rsu.lv/en/news/rsu-initiative-saves-lives-three-newborns" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 640, y: 100,
+        color: "#7f7f7f",
+        title: "Seven years of raising awareness on child safety and first aid",
+        text: `The free annual event 'Zinošs un drošs', organised by RSU and partners, attracted around 1,400 visitors in 2024. Through engaging activities, children and their families learned about first aid, fire safety, and accident prevention. Held for seven consecutive years, the event promotes healthier and safer lifestyles within the community. <a href="https://www.rsu.lv/aktualitates/bezmaksas-izglitojosais-pasakums-zinoss-un-dross-pulce-daudz-interesentu" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+    //   {
+    //     x: 160, y: 190,
+    //     color: "#7f7f7f",
+    //     title: "",
+    //     text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+    //   },
+     //   {
+    //     x: 240, y: 190,
+    //     color: "#7f7f7f",
+    //     title: "",
+    //     text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+    //   },
+       {
+        x: 320, y: 190,
+        color: "#7f7f7f",
+        title: "RSU connects science with the public at the annual Researchers’ Night",
+        text: `Nearly 3,000 visitors participated in RSU Researchers’ Night events in 2024, with people of all ages enjoying hands-on workshops in dentistry, surgery, sports science, and chemistry. This annual event promotes science awareness and education, inspiring the public and especially young people to explore scientific careers. <a href="https://www.rsu.lv/aktualitates/zinatnieku-nakts-rigas-stradina-universitate-pulcejusi-3000-interesentu" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+      {
+        x: 400, y: 230,
+        color: "#f58220",
+        title: "RSU pioneers military medicine education in the Baltics",
+        text: `RSU was the first university in the Baltics to integrate military medicine into its medical curriculum in 2023. Developed in collaboration with the Latvian Ministry of Defence and National Armed Forces, the course uses advanced simulation and immersive training to equip future healthcare professionals with essential skills to manage emergencies in military and disaster settings. <a href="https://www.rsu.lv/en/news/rsu-management-and-minister-defence-andris-spruds-discuss-importance-military-medicine-context" target="_blank" style="color: #fff; text-decoration: underline;">Learn about the progress and future plans of this initiative.</a>`
+      },
+      {
+        x: 480, y: 190,
+        color: "#7f7f7f",
+        title: "RSU research underpins national labour protection measures 2024-2027",
+        text: `RSU researchers' analysis of workplace accidents shaped the labour protection measures included in the National Development Plan for Labour Protection for 2024–2027, approved by the Cabinet of Ministers. Scientists' data-driven proposals aim to promote employee well-being, improve labour productivity, and reduce the number of workplace accidents. <a href="https://www.rsu.lv/en/news/rsu-researchers-improve-occupational-safety-latvia" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      },
+       //   {
+        //     x: 560, y: 190,
+        //     color: "#7f7f7f",
+        //     title: "",
+        //     text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+        //   },
+        //   {
+        //     x: 620, y: 190,
+        //     color: "#7f7f7f",
+        //     title: "",
+        //     text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+        //   },
+    ];
+
+    function hexagonPath(cx, cy, r) {
+      let path = "";
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 3 * i;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        path += (i === 0 ? "M" : "L") + x + "," + y;
+      }
+      return path + "Z";
+    }
+
+    data.forEach(d => {
+      const hex = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hex.setAttribute("d", hexagonPath(d.x, d.y, hexSize));
+      hex.setAttribute("fill", d.color);
+      hex.classList.add("hex");
+
+      hex.addEventListener("mouseover", e => {
+        tooltip.innerText = d.title;
+        tooltip.style.visibility = "visible";
+      });
+
+      hex.addEventListener("mousemove", e => {
+        const containerRect = document.getElementById("hex-container").getBoundingClientRect();
+        const x = e.clientX - containerRect.left;
+        const y = e.clientY - containerRect.top;
+
+        tooltip.style.left = (x + 5) + "px";
+        tooltip.style.top = (y +5) + "px";
+        });
+
+      hex.addEventListener("mouseout", () => {
+        tooltip.style.visibility = "hidden";
+      });
+
+      hex.addEventListener("click", e => {
+        popupTitle.innerText = d.title;
+        popupText.innerHTML = d.text;
+        popup.style.backgroundColor = d.color;
+
+        const containerRect = document.getElementById("hex-container").getBoundingClientRect();
+        const popupWidth = popup.offsetWidth;
+        const popupHeight = popup.offsetHeight;
+
+        let left = e.clientX - containerRect.left + 20; // default right offset
+        let top = e.clientY - containerRect.top + 20;   // default below offset
+
+        // If popup would overflow container width, show it to the left instead
+        if (left + popupWidth > containerRect.width) {
+            left = e.clientX - containerRect.left - popupWidth - 20;
+        }
+
+        // Prevent popup from overflowing bottom
+        if (top + popupHeight > containerRect.height) {
+            top = containerRect.height - popupHeight - 10;
+        }
+        // Prevent popup from overflowing top
+        if (top < 0) {
+            top = 10;
+        }
+
+        popup.style.left = left + "px";
+        popup.style.top = top + "px";
+        popup.style.display = "block";
+        });
+
+
+      svg.appendChild(hex);
+    });
+  </script>
+</body>
+</html>
