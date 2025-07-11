@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RSU ir kas vairāk par vietu reitingos</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    #hex-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 600px;
+      margin: 50px auto;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hex:hover {
+      stroke: #000;
+      stroke-width: 2;
+      cursor: pointer;
+    }
+
+    #tooltip {
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 1000;
+    }
+
+    #popup {
+      position: absolute;
+      padding: 15px;
+      color: white;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 250px;
+      display: none;
+      z-index: 10;
+    }
+
+    #popup h3 {
+      margin: 0 0 10px 0;
+    }
+
+    #popup button {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    #popup button:hover {
+      background: rgba(255,255,255,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div id="hex-container">
+    <h1 style="text-align: center; margin-top: 30px; font-family: sans-serif;">
+        Atklāj, kā RSU ir kas vairāk par vietu reitingos
+      </h1>
+    
+    <div id="legend" style="display: flex; justify-content: center; gap: 20px; margin: 10px 0 10px 20px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #8e001c; display: inline-block; border-radius: 4px;"></span>
+        <span>Zinātnes rezultātu ieviešana klīniskajā praksē</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #7f7f7f; display: inline-block; border-radius: 4px;"></span>
+        <span>Sabiedrības izpratnes un politikas veidošana</span>
+    </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #00377c; display: inline-block; border-radius: 4px;"></span>
+        <span>Latvijas ekonomikas stiprināšana</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 16px; height: 16px; background: #f58220; display: inline-block; border-radius: 4px;"></span>
+        <span>Studiju piedāvājuma pielāgošana sabiedrības vajadzībām</span>
+    </div>
+    </div>
+
+    <svg id="hexmap"></svg>
+    <div id="tooltip"></div>
+    <div id="popup">
+      <h3 id="popup-title"></h3>
+      <p id="popup-text"></p>
+      <button onclick="popup.style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const svg = document.getElementById("hexmap");
+    const tooltip = document.getElementById("tooltip");
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popup-title");
+    const popupText = document.getElementById("popup-text");
+
+    const hexSize = 40;
+
+    // Manually positioned hexagons
+    const data = [
+      {
+        x: 160, y: 100,
+        color: "#8e001c",
+        title: "RSU pētnieku izstrādātas vadlīnijas uzlabo māmiņu un jaundzimušo aprūpi",
+        text: `RSU pētnieki, balstoties uz 2021. gada aptaujas datiem, izstrādāja mācību programmu dzemdību aprūpes personālam un pilnveidoja dzemdību aprūpes vadlīnijas. Šīs iniciatīvas rezultātā vardarbības gadījumu skaits dzemdību laikā samazinājās no 17% līdz 5%. Tāpat par attiecīgi 23% un 45% saruka to jauno māmiņu īpatsvars, kuras netika brīdinātas par savas un bērniņa veselības pazīmēm, kam jāpievērš uzmanība. <a href="https://www.rsu.lv/aktualitates/rsu-petnieki-sniedz-ieguldijumu-mates-un-jaundzimusa-aprupes-uzlabosana-latvija" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 240, y: 140,
+        color: "#7f7f7f",
+        title: "RSU pētnieki pilnveido attālinātā darba politiku Latvijā",
+        text: `RSU pētnieki sagatavoja datos balstītus grozījumus vairākos likumos, tostarp 2020. gadā Darba likumā oficiāli ieviešot jēdzienu 'attālinātais darbs'. Šīs izmaiņas ļāva darba devējiem kompensēt tādas attālināto darbinieku izmaksas kā elektrība un internets, kā arī noteica nodokļu atvieglojumus šiem izdevumiem. Šīs reformas ir uzlabojušas darba un privātās dzīves līdzsvaru nozarēs ar augstu attālinātā darba īpatsvaru, piemēram, IT un finanšu sektoros, kur 2024. gadā attālināti strādāja vairāk nekā 50% darbinieku. <a href="https://www.rsu.lv/aktualitates/rsu-petnieki-inicie-likumu-grozijumus-par-attalinata-darba-organizesanu-latvija" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 320, y: 100,
+        color: "#f58220",
+        title: "RSU Pedagoģiskās izaugsmes centrs ceļ pasniedzēju kvalitāti Latvijā un ārpus tās",
+       text: `Kopš RSU Pedagoģiskās izaugsmes centra (PIC) dibināšanas 2014.gadā tas ir būtiski veicinājis universitātes akadēmisko izcilību, nodrošinot mērķētu un kvalitatīvu atbalstu mācībspēku profesionālajai pilnveidei. Par dalību dažādos mācību pasākumos, kuru kopējais apjoms ik gadu vidēji sasniedz 340 akadēmiskās stundas, 2024.gadā tika izsniegti 5417 apliecinājumi. Šo visaptverošo izglītības piedāvājumu papildina individuālas konsultācijas un rūpīgi izstrādāti metodiskie materiāli, kas kalpo kā praktiski ceļveži mūsdienīgām mācīšanas un mācīšanās pieejām. Šis daudzpusīgais atbalsts palīdz mācībspēkiem uzlabot pedagoģiskās prasmes un padarīt savus kursus studentcentrētus un iekļaujošus. PIC arī aktīvi sadarbojas ar vairāk nekā 20 augstskolām Latvijā un ārvastīs, lai sekmētu labo prakšu apmaiņu. Iedvesmojot nepārtrauktu akadēmisko attīstību, PIC ir kļuvis par kvalitātes celšanas balstu augstākās izglītības sektorā Latvijā un ārpus tās. <a href="https://www.rsu.lv/pic" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 400, y: 140,
+        color: "#8e001c",
+        title: "Personalizēta vingrojumu terapija uzlabo fibromialģijas pacientu labbūtību",
+        text: `RSU pilotpētījumam par fibromialģiju izdevās samazināt muskuļu sāpes 80% dalībnieku, savukārt 70% dalībnieku uzlaboja savu fizisko izturību un miega kvalitāti. Jaunās terapijas pamatā ir individuāli pielāgota vingrojumu programma. Pētījumi par saistītajiem biomarķieriem turpinās. <a href="https://www.rsu.lv/aktualitates/rsu-petnieki-uzlabo-fibromialgijas-diagnostiku" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 480, y: 100,
+        color: "#f58220",
+        title: "RSU nosaka standartus mākslīga intelekta integrācijai Latvijas augstākajā izglītībā",
+        text: `RSU Pedagoģiskās izaugsmes centrs ir pirmā institūcija Latvijā, kas publicējusi visaptverošas vadlīnijas mākslīgā intelekta (MI) integrēšanai augstākajā izglītībā. Vadlīnijas sniedz pasniedzējiem praktiskus padomus par ētisku un efektīvu MI izmatošanu mācību procesā un arī palīdz studentiem apgūt, kā pielietot MI atbildīgi. <a href="https://www.rsu.lv/aktualitates/rsu-izstrada-latvija-pirmas-vadlinijas-maksliga-intelekta-lietosanai-augstakaja" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 560, y: 140,
+        color: "#8e001c",
+        title: "RSU iniciatīva glābj jaundzimušo dzīvības, veicot agrīnu SMA skrīningu",
+        text: `RSU pētnieku iniciatīva veicināja spinālās muskuļu atrofijas (SMA) analīžu iekļaušanu jaundzimušo skrīninga programmā. Šīs programmas ietvaros veiktā agrīnā diagnostika jau ir glābusi triju jaundzimušo dzīvības, ļaujot uzsākt ārstēšanu pirms simptomu parādīšanās un tādējādi būtiski uzlabojot šo bernu veselības ilgtermiņa prognozi un dzīves kvalitāti. <a href="https://www.rsu.lv/aktualitates/rsu-iniciativa-devusi-trim-jaundzimusajiem-iespeju-dzivot" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 640, y: 100,
+        color: "#7f7f7f",
+        title: "Bērnu drošības un pirmās palīdzības izpratnes veicināšana septiņu gadu garumā",
+        text: `RSU un sadarbības partneru organizētais bezmaksas ikgadējais pasākums "Zinošs un drošs" 2024. gadā pulcēja ap 1400 apmeklētāju. Pasākuma ietvaros bērni un viņu vecāki ar dažādām aktivitātēm apguva pirmo paldīdzību, ugunsdrošību un negadījumu profilaksi. Pasākums notiek jau septiņus gadus pēc kārtas, veicinot veselīgāku un drošāku dzīvesveidu sabiedrībā. <a href="https://www.rsu.lv/aktualitates/bezmaksas-izglitojosais-pasakums-zinoss-un-dross-pulce-daudz-interesentu" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+       {
+         x: 160, y: 190,
+         color: "#7f7f7f",
+         title: "RSU ir reputācijas līdere Latvijas sabiedrībā",
+         text: `Jau deviņus gadus pēc kārtas Latvijas sabiedrība atzīst RSU par augstskolu ar labāko reputāciju valstī. Šo atzinību sniedz ikgadējs pētījums, ko veic Latvijas vadošā sociālo un mediju pētījumu kompānija Kantar, aptaujājot vairāk nekā 1000 iedzīvotāju vecumā no 15 līdz 60 gadiem. <a href="https://www.rsu.lv/aktualitates/rsu-latvijas-augstskolu-reputacijas-lidere-jau-devinus-gadus" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+       },
+       {
+        x: 240, y: 230,
+        color: "#00377c",
+        title: "RSU trīs gadus pēc kārtas atzīta par iekārotāko darba devēju valsts pārvaldē",
+        text: `2024.gada aptaujā 'TOP darba devējs', kurā piedalījās vairāk nekā 18 tūkstoši dalībnieku, RSU jau trešo gadu pēc kārtas tika atzīta par iekārotāko darba devēju valsts pārvaldē. Šī atzinība atspoguļo RSU sociāli ilgtspējīgās nodarbinātības prakses, kas prioritizē darbinieku labklājību, profesionālo izaugsmi un atbalstošu darba vidi. <a href="https://www.rsu.lv/aktualitates/rsu-iekarotakais-darba-devejs-valsts-parvalde-treso-gadu-pec-kartas" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+       {
+        x: 320, y: 190,
+        color: "#7f7f7f",
+        title: "RSU tuvina zinātni sabiedrībai ikgadējajā Zinātnieku naktī",
+        text: `RSU Zinātnieku nakts pasākumos 2024.gadā iesaistījās teju 3000 dalībnieku, visu vecumu grupu cilvēkiem piedaloties praktiskās zobārstniecības, ķirurģijas, sporta zinātnes un ķīmijas darbnīcās. Šis ikgadējais pasākums veicina sabiedrības izpratni par zinātni un izglītību un iedvesmo jauniešus izzināt karjeras iespējas zinātnē. <a href="https://www.rsu.lv/aktualitates/zinatnieku-nakts-rigas-stradina-universitate-pulcejusi-3000-interesentu" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+      {
+        x: 400, y: 230,
+        color: "#f58220",
+        title: "RSU aizsāk militārās medicīnas izglītību Baltijā",
+        text: `2023.gadā RSU kļuva par pirmo universitāti Baltijā, kas medicīnas studiju programmā integrēja militārās medicīnas kursu. Kurss ir izstrādāts sadarbībā ar Aizsardzības ministriju un Nacionālajiem bruņotajiem spēkiem, un tā ietvaros tiek izmantota uz simulācijām balstīta un imersīva apmācība, lai nākotnes veselības aprūpes speciālisti apgūtu būtiskas prasmes ārkārtas situāciju vadībai militāros un katastrofu apstākļos. <a href="https://www.rsu.lv/aktualitates/rsu-vadiba-ar-aizsardzibas-ministru-andri-sprudu-apspriez-militaras-medicinas-nozimi" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk par šīs iniciatīvas progresu un nākotnes plāniem.</a>`
+      },
+      {
+        x: 480, y: 190,
+        color: "#00377c",
+        title: "RSU augstākās izglītības eksports veido 0.31% no Latvijas IKP",
+        text: `Latvijas Stratēģijas un Ekeonomikas Risinājumu institūta veiktais pētījums liecina, ka 2024. gadā RSU augstākās izglītības eksports vien veidoja aptuveni 0,31 % no Latvijas iekšzemes kopprodukta (IKP). Ja universitāte turpinās piesaistīt ārvalstu studentus līdzšinējā tempā, prognozēts, ka tuvāko sešu gadu laikā tās radītā ekonomiskā vērtība pārsniegs 1 miljardu eiro, veidojot vidēji 0,4 % no IKP gadā. <a href="https://www.rsu.lv/aktualitates/arvalstu-studenti-latvijas-ekonomikas-izaugsmes-dzinejspeks-augstakas-izglitibas" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+         {
+            x: 560, y: 230,
+            color: "#f58220",
+            title: "RSU starptautiskās partnerības nodrošina apmācību atbilstoši studentu izcelsmes valstu vajadzībām",
+            text: `RSU <a href="https://www.rsu.lv/starptautiska-sadarbiba/sadarbibas-slimnicas" target="_blank" style="color: #fff; text-decoration: underline;">sadarbības slimnīcas ārvalstīs</a> piedāvā klīniskās prakses Vācijā, Somijā, Itālijā, Izraēlā un Portugālē, dodot studentiem iespēju gūt klīnisko pieredzi vidē, kurā viņi pārvalda vietējo valodu. Papildus tam <a href="https://www.rsu.lv/rsu-filiale-stade" target="_blank" style="color: #fff; text-decoration: underline;">RSU filiāle Štādē</a>, sadarbojoties ar Elbas slimnīcu Štādē, ļauj Vācijas izcelsmes studentiem iespēju no 4. studiju gada pilnībā apgūt klīnisko apmācību savā valstī. Šīs iespējas garantē, ka ārvalstu studenti iegūst praktiskas zināšanas, kas atbilst viņu izcelsmes valstu veselības aprūpes sistēmu specifikai un vajadzībām.`
+          },
+          {
+            x: 640, y: 190,
+            color: "#7f7f7f",
+            title: "RSU rīko vienu no vadošajiem starpdisciplinārajiem zinātniskajiem pasākumiem Ziemeļeiropā",
+            text: `Ik divus gadus RSU Zinātnes nedēļa pulcē akadēmiskā un privātā sektora pārstāvjus, kā arī politikas veidotājus, lai apmainītos ar idejām un risinātu sabiedrībai aktuālus jautājumus veselības un sociālo zinātņu jomās. 2025. gadā šis forums piesaistīja gandrīz 9000 dalībnieku no 72 valstīm. <a href="https://www.rsu.lv/en/news/most-significant-scientific-event-year-rsu-research-week-has-concluded" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+          },
+      {
+        x: 160, y: 280,
+       color: "#f58220",
+       title: "RSU atklāj jaunu ēru Latvijas medicīnas izglītībā ar programmu 'Medicīna 3.0'",
+        text: `2025.gada septembrī RSU uzsāks studiju programmu 'Medicīna 3.0' – būtiski pārveidotu medicīnas izglītības modeli, kurā 50–60% satura tiek aizstāts ar tēmām par digitālo veselību, mākslīgo intelektu, uzņēmējdarbību, juridiskajām zināšanām un pastiprinātu pētniecības sagatavotību. Programma izstrādāta ciešā sadarbībā ar studentiem, ārstiem un nozares ekspertiem, lai sagatavotu topošos ārstus strauji mainīgajiem veselības aprūpes izaicinājumiem. <a href="https://www.rsu.lv/aktualitates/studiju-programma-medicina-30-jauns-laikmets-latvijas-medicinas-izglitiba" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+  //  {
+      //   x: 240, y: 320,
+      //   color: "#00377c",
+      //   title: "",
+      //   text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      // },
+       {
+        x: 320, y: 280,
+        color: "#8e001c",
+        title: "RSU vada simulācijās balstītas medicīnas un veselības aprūpes izglītības stratēģijas ieviešanu Latvijā",
+         text: `RSU vada nacionālo darba grupu sadarbībā ar Latvijas Veselības ministriju, lai izstrādātu stratēģisku ietvaru simulācijas integrēšanai visos klīniskās apmācības līmeņos. Mērķis ir uzlabot profesionālo kompetenci un pacientu drošību visā Latvijas veselības aprūpes sistēmā. Pateicoties RSU ilggadējai pieredzei un modernajai infrastruktūrai, universitāte ir izcili piemērota, lai vadītu šo pāreju uz drošāku un efektīvāku medicīnisko izglītību. <a href="https://www.rsu.lv/aktualitates/rsu-mitc-virza-iniciativu-par-simulacija-balstitas-medicinas-un-veselibas-aprupes" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+          },
+      //  {
+      //   x: 400, y: 320,
+      //   color: "#00377c",
+      //   title: "",
+      //   text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      // },
+       {
+        x: 480, y: 280,
+        color: "#7f7f7f",
+        title: "RSU pētījumi veido pamatu valsts darba aizsardzības pasākumiem 2024.-2027.gadā",
+        text: `RSU pētnieku veikta darba negadījumu analīze ir bijusi pamatā darba aizsardzības pasākumiem, kas iekļauti Nacionālajā darba aizsardzības attīstības plānā 2024.–2027.gadam, ko apstiprinājis Ministru kabinets. Zinātnieku datos balstītie priekšlikumi ir vērsti uz darbinieku labbūtības veicināšanu, darba ražīguma uzlabošanu un nelaimes gadījumu skaita mazināšanu darbavietās. <a href="https://www.rsu.lv/aktualitates/rsu-darba-drosibas-un-vides-veselibas-instituts-uzlabo-darba-drosibu-latvija" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+       //  {
+      //   x: 560, y: 280,
+      //   color: "#00377c",
+      //   title: "",
+      //   text: ` <a href="" target="_blank" style="color: #fff; text-decoration: underline;">Learn more.</a>`
+      // },
+       {
+        x: 640, y: 280,
+        color: "#f58220",
+       title: "RSU stiprina valsts gatavību krīzes situācijām",
+        text: `Pateicoties plašajai pieredzei un pieejamajam aprīkojumam, RSU Medicīnas izglītības tehnoloģiju centrs regulāri piedalās Nacionālo bruņoto spēku un Zemessardzes organizētajās simulācijas mācībās. Šie treniņi uzlabo valsts gatavību militārām un civilmilitārām krīzes situācijām. <a href="https://mitc.rsu.lv/lv/aktualitates/panaceja-2025-mitc-simulaciju-risinajumi-stiprina-valsts-gatavibu-krizes-situacijam" target="_blank" style="color: #fff; text-decoration: underline;">Uzzini vairāk.</a>`
+      },
+    ];
+
+    function hexagonPath(cx, cy, r) {
+      let path = "";
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 3 * i;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        path += (i === 0 ? "M" : "L") + x + "," + y;
+      }
+      return path + "Z";
+    }
+
+    data.forEach(d => {
+      const hex = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hex.setAttribute("d", hexagonPath(d.x, d.y, hexSize));
+      hex.setAttribute("fill", d.color);
+      hex.classList.add("hex");
+
+      hex.addEventListener("mouseover", e => {
+        tooltip.innerText = d.title;
+        tooltip.style.visibility = "visible";
+      });
+
+      hex.addEventListener("mousemove", e => {
+        const containerRect = document.getElementById("hex-container").getBoundingClientRect();
+        const x = e.clientX - containerRect.left;
+        const y = e.clientY - containerRect.top;
+
+        tooltip.style.left = (x + 5) + "px";
+        tooltip.style.top = (y +5) + "px";
+        });
+
+      hex.addEventListener("mouseout", () => {
+        tooltip.style.visibility = "hidden";
+      });
+
+      hex.addEventListener("click", e => {
+        popupTitle.innerText = d.title;
+        popupText.innerHTML = d.text;
+        popup.style.backgroundColor = d.color;
+
+        const containerRect = document.getElementById("hex-container").getBoundingClientRect();
+        const popupWidth = popup.offsetWidth;
+        const popupHeight = popup.offsetHeight;
+
+        let left = e.clientX - containerRect.left + 20; // default right offset
+        let top = e.clientY - containerRect.top + 20;   // default below offset
+
+        // If popup would overflow container width, show it to the left instead
+        if (left + popupWidth > containerRect.width) {
+            left = e.clientX - containerRect.left - popupWidth - 20;
+        }
+
+        // Prevent popup from overflowing bottom
+        if (top + popupHeight > containerRect.height) {
+            top = containerRect.height - popupHeight - 10;
+        }
+        // Prevent popup from overflowing top
+        if (top < 0) {
+            top = 10;
+        }
+
+        popup.style.left = left + "px";
+        popup.style.top = top + "px";
+        popup.style.display = "block";
+        });
+
+
+      svg.appendChild(hex);
+    });
+  </script>
+</body>
+</html>
